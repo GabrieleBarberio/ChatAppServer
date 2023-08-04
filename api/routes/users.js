@@ -4,6 +4,37 @@ const Joi = require("joi");
 const bcrypt = require("bcryptjs");
 const { User } = require("../../db");
 const jwt = require("jsonwebtoken");
+
+// Middleware per verificare il token (mandare il token per ogni richiesta nell'header get degli user nel DB,
+// non vogliamo che chiunque possa rubare le mail presenti)
+/**
+ *
+ * headers:{
+ *    Authorization: `Bearer ${token}`
+ * }
+ */
+const authToken = async (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+
+  if (!authHeader) {
+    return res.status(401).send("Error: you are not authorized");
+  }
+
+  const token = authHeader.split(" ")[1]; // splitto gli spazi della stringa e mi prendo il secondo elemento per recuperare il token split== ["Bearer","token"]
+
+  if (!token) {
+    return res.status(401).send("Error: you are not authorized");
+  }
+
+  try {
+    const user = await jwt.verify(token, process.env.SECRET_KEY);
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(403).send("Error: you are not authorized");
+  }
+};
+
 /**
  * @path /api/users
  * Metodo: GET
@@ -11,7 +42,7 @@ const jwt = require("jsonwebtoken");
  * Params: Nessun parametro richiesto.
  */
 //*      middleware async
-app.get("/", async (_, res) => {
+app.get("/", authToken, async (_, res) => {
   //imposto richiesta get sul path /api/users
   try {
     const users = await User.find({}, "-password -__v", { lean: true }); // salvo il risultato di un arra
@@ -31,7 +62,7 @@ app.get("/", async (_, res) => {
  * !  :id (l'ID dell'utente da cercare nel database).
  */
 
-app.get("/:id", async (req, res) => {
+app.get("/:id", authToken, async (req, res) => {
   const _id = req.params.id; // _id = quello passato nella richiesta
   try {
     const user = await User.findOne({ _id }, "-password -__v", { lean: true }); // cerco _id, escludo pass e __V con -, lean: true opzione per i json
