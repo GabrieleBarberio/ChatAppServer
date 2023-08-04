@@ -4,8 +4,6 @@ const express = require("express");
 const app = express();
 const db = require("./db");
 const users = require("./api/routes/users");
-const login = require("./api/routes/login");
-
 const cors = require("cors");
 const helmet = require("helmet");
 

@@ -3,7 +3,7 @@ const app = express.Router();
 const Joi = require("joi");
 const bcrypt = require("bcryptjs");
 const { User } = require("../../db");
-
+const jwt = require("jsonwebtoken");
 /**
  * @path /api/users
  * Metodo: GET
@@ -77,26 +77,41 @@ app.post("/", async (req, res) => {
 /**
  * @path /api/users/login
  * + Metodo: POST
- * * Descrizione: Login dell'utente verificando le credenziali.(manca JWT)
+ * * Descrizione: Login dell'utente verificando le credenziali.
  *   Params:
  *  ! user_name
  *  ! password
  */
 app.post("/login", async (req, res) => {
   const { user_name, password } = req.body; // destrutturo il body della richiesta e prendo user_name e password
+
   try {
-    const user = await User.findOne({ user_name }, { lean: true }); // trovo l'oggetto con user_name uguali tra db e req
+    const user = await User.findOne({ user_name }, "user_name password", {
+      // 3 PARAMETRI!
+      lean: true,
+    });
+    const payload = {
+      //payload per generare il jwt
+      userId: user._id,
+      userName: user.user_name,
+    };
+    console.log(user); // trovo l'oggetto con user_name uguali tra db e req
     if (!user) {
       return res.status(400).send("User doesn't exist"); // se non esiste nel database errore
     }
     if (await bcrypt.compare(password, user.password)) {
+      const token = jwt.sign(payload, process.env.SECRET_KEY, {
+        expiresIn: "24h", // Il token scadrà dopo 24 ore (?)
+      });
       // se esiste e le password sono uguali, hai fatto il login
-      return res.status(200).send("Login successful");
+      return res.status(200).send({ token, user_name });
     } else {
-      return res.status(401).send("Invalid password"); //altrimenti la pass è errata
+      return res.status(401).send("Usernamane or Password not found!"); //altrimenti la pass è errata
     }
   } catch (error) {
-    return res.status(500).send("fail to connect"); //per ogni altro errore 500
+    console.error("Error:", error);
+
+    return res.status(500).send("Fail to connect"); //per ogni altro errore 500
   }
 });
 
