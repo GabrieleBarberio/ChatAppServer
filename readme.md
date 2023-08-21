@@ -20,10 +20,6 @@ Per prima cosa dovrai clonare la in locale la repository di IMEO - Instant Messa
 
 Crea una directory dedicata, apri il terminale ed esegui:
 
-> npm create vite@latest
-
-> yarn create vite
-
 Dopo aver ottunuto la corretta istallazione clona la repo nella tua directory:
 
 > git clone https://github.com/GabrieleBarberio/ImeoServer.git .
