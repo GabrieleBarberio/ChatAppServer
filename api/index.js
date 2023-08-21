@@ -1,9 +1,7 @@
 const express = require("express");
-const app = express.Router();
+const router = express.Router();
 
-/**
- * @path /api/users
- */
-app.use("/users", require("./routes/users")); // definizione path user, dopo api/
+router.use("/users", require("./routes/users"));
+// router.use("/chat", require("./routes/chat"));
 
-module.exports = app;
+module.exports = router;

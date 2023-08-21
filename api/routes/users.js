@@ -3,37 +3,12 @@ const app = express.Router();
 const Joi = require("joi");
 const bcrypt = require("bcryptjs");
 const { User } = require("../../db");
+const authToken = require("../../utility/authToken");
 const jwt = require("jsonwebtoken");
+// const authToken = require("../../utility/authToken");
 
 // Middleware per verificare il token (mandare il token per ogni richiesta nell'header get degli user nel DB,
 // non vogliamo che chiunque possa rubare le mail presenti)
-/**
- *
- * headers:{
- *    Authorization: `Bearer ${token}`
- * }
- */
-const authToken = async (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-
-  if (!authHeader) {
-    return res.status(401).send("Error: you are not authorized");
-  }
-
-  const token = authHeader.split(" ")[1]; // splitto gli spazi della stringa e mi prendo il secondo elemento per recuperare il token split== ["Bearer","token"]
-
-  if (!token) {
-    return res.status(401).send("Error: you are not authorized");
-  }
-
-  try {
-    const user = await jwt.verify(token, process.env.SECRET_KEY);
-    req.user = user;
-    next();
-  } catch (error) {
-    return res.status(403).send("Error: you are not authorized");
-  }
-};
 
 /**
  * @path /api/users
@@ -124,7 +99,7 @@ app.post("/login", async (req, res) => {
     const payload = {
       //payload per generare il jwt
       userId: user._id,
-      userName: user.user_name,
+      user_name: user.user_name,
     };
     console.log(user); // trovo l'oggetto con user_name uguali tra db e req
     if (!user) {
@@ -135,7 +110,7 @@ app.post("/login", async (req, res) => {
         expiresIn: "24h", // Il token scadrà dopo 24 ore (?)
       });
       // se esiste e le password sono uguali, hai fatto il login
-      return res.status(200).send({ token, user_name });
+      return res.status(200).send({ token, user_name: user.user_name });
     } else {
       return res.status(401).send("Usernamane or Password not found!"); //altrimenti la pass è errata
     }
