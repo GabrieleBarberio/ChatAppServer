@@ -62,22 +62,12 @@ app.get("/chat", (_, res) => {
 });
 const chat = io.of("/");
 
-// io.on("connection", (socket) => {
-//   console.log("a user connected");
-//   socket.on("chatMessage", (message) => {
-//     io.emit("chatMessage", message);
-//     console.log(message);
-//   });
-//   socket.on("disconnect", () => {
-//     console.log("user disconnected");
-//   });
-// });
-
 //     path namespace evnt       socket che si conentte
 chat.on("connection", (socket) => {
   console.log("a user connected", socket.id);
-  socket.on("chatMessage", (message) => {
-    io.emit("chatMessage", message);
+  socket.join("room");
+  socket.on("chatMessage", (message, autor) => {
+    io.to("room").emit("chatMessage", message, autor);
     console.log(message);
   });
   socket.on("disconnect", () => {

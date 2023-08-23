@@ -6,7 +6,7 @@ const { createChat } = require("../../utility/chatController");
 const { io } = require("../../index");
 
 router.get("/", (_, res) => {
-  res.sendFile(path.join(__dirname, "../../../imeo", "index.html")); // Assicurati che il percorso sia corretto
+  res.sendFile(path.join(__dirname, "../../../imeo", "index.html"));
 });
 
 io.on("connection", (socket) => {
