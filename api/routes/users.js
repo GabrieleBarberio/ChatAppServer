@@ -110,7 +110,9 @@ app.post("/login", async (req, res) => {
         expiresIn: "24h", // Il token scadrà dopo 24 ore (?)
       });
       // se esiste e le password sono uguali, hai fatto il login
-      return res.status(200).send({ token, user_name: user.user_name });
+      return res
+        .status(200)
+        .json({ token, user_name: user.user_name, _id: user._id });
     } else {
       return res.status(401).send("Usernamane or Password not found!"); //altrimenti la pass è errata
     }

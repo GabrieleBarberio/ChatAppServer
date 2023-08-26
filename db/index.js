@@ -13,6 +13,7 @@ const connect = async () => {
 
 const models = {
   User: require("./models/User"), // Definisco i modelli disponibili, in questo caso solo User
+  Message: require("./models/Message"),
 };
 
 module.exports = {

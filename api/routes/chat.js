@@ -1,21 +1,33 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
-const { createChat } = require("../../utility/chatController");
+const authToken = require("../../utility/authToken");
+const { Message } = require("../../db");
 
-const { io } = require("../../index");
+/**
+ * @path /api/chat/:room
+ * + Metodo: GET
+ * * Descrizione: Restituisce i messaggi di una room specifica dal database.
+ *   Params:
+ * ! :room (la room da cercare nel database, composta da from-to).
+ */
+router.get("/:room", authToken, async (req, res) => {
+  const { room } = req.params;
+  const [from, to] = room.split("-");
+  try {
+    const messages = await Message.find({
+      $or: [
+        { from, to },
+        { from: to, to: from },
+      ],
+    });
 
-router.get("/", (_, res) => {
-  res.sendFile(path.join(__dirname, "../../../imeo", "index.html"));
+    res.status(200).json(messages);
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching messages" });
+  }
 });
 
-io.on("connection", (socket) => {
-  console.log("a user connected");
-  socket.on("chatMessage", (message) => {
-    io.emit("chatMessage", message);
-    console.log(message);
-  });
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
-  });
-});
+module.exports = router;

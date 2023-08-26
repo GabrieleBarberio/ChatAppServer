@@ -9,6 +9,9 @@ const db = require("./db");
 
 const cors = require("cors");
 const helmet = require("helmet");
+const mongoose = require("mongoose");
+
+const Message = require("./db/models/Message");
 
 app.use(cors());
 app.use(helmet());
@@ -61,15 +64,40 @@ app.get("/chat", (_, res) => {
   res.sendFile(path.join(__dirname, "../../../imeo", "index.html"));
 });
 const chat = io.of("/");
-
-//     path namespace evnt       socket che si conentte
+//implementa: salvataggio dei msg nella collection
+//route per chiamare la collection
 chat.on("connection", (socket) => {
-  console.log("a user connected", socket.id);
-  socket.join("room");
-  socket.on("chatMessage", (message, autor) => {
-    io.to("room").emit("chatMessage", message, autor);
-    console.log(message);
+  // connessione ai client tramite evnt "connection"
+  console.log("a user connected");
+
+  socket.on("joinRoom", (room) => {
+    // join della room in base agli id (l'evento joinRoom passa prende la room passata dal client recpientId+userId)
+    console.log(`User joined room: ${room}`);
+    socket.join(room);
   });
+
+  socket.on("chatMessage", async (message) => {
+    if (!mongoose.Types.ObjectId.isValid(message.to)) {
+      console.log("Invalid 'to' ID");
+      return;
+    }
+    const room = `${message.to}-${message.author._id}`;
+    //enento chatMessage
+    const newMessage = new Message({
+      // salvo il messaggio nel db
+      from: message.author._id,
+      to: message.to,
+      content: message.text,
+    });
+    try {
+      await newMessage.save();
+      chat.to(room).emit("chatMessage", message);
+      console.log(message);
+    } catch (error) {
+      console.error("Errore: ", error);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
