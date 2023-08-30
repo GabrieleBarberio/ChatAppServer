@@ -87,7 +87,7 @@ chat.on("connection", (socket) => {
       // salvo il messaggio nel db
       from: message.author._id,
       to: message.to,
-      content: message.text,
+      content: message.content,
     });
     try {
       await newMessage.save();
