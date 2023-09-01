@@ -24,7 +24,7 @@ const path = require("path");
 const { SERVER_PORT } = process.env;
 const { Server } = require("socket.io");
 const io = new Server(server, {
-  cors: { origin: "http://localhost:5173" },
+  cors: { origin: "*" },
 });
 
 app.use("/api", require("./api"));
@@ -60,45 +60,50 @@ server.listen(SERVER_PORT, () => {
  *
  * path localhost:3030/
  */
-app.get("/chat", (_, res) => {
+app.get("/", (_, res) => {
   res.sendFile(path.join(__dirname, "../../../imeo", "index.html"));
 });
-const chat = io.of("/");
-//implementa: salvataggio dei msg nella collection
+
 //route per chiamare la collection
-chat.on("connection", (socket) => {
-  // connessione ai client tramite evnt "connection"
-  console.log("a user connected");
+io.on("connection", (socket) => {
+  console.log("Un utente si è connesso");
 
   socket.on("joinRoom", (room) => {
-    // join della room in base agli id (l'evento joinRoom passa prende la room passata dal client recpientId+userId)
-    console.log(`User joined room: ${room}`);
+    console.log(`L'utente si è unito alla stanza: ${room}`);
     socket.join(room);
   });
 
-  socket.on("chatMessage", async (message) => {
+  socket.on("sendMessage", async (message, room) => {
     if (!mongoose.Types.ObjectId.isValid(message.to)) {
-      console.log("Invalid 'to' ID");
+      socket.emit(
+        "errorMessage",
+        "Si è verificato un errore con la validazione del ID"
+      );
+      console.log("ID non valido");
       return;
     }
-    const room = `${message.to}-${message.author._id}`;
-    //enento chatMessage
+    console.log("send", message);
     const newMessage = new Message({
-      // salvo il messaggio nel db
+      content: message.content,
       from: message.author._id,
       to: message.to,
-      content: message.content,
     });
     try {
       await newMessage.save();
-      chat.to(room).emit("chatMessage", message);
+
+      io.to(room).emit("receiveMessage", message);
+
       console.log(message);
     } catch (error) {
       console.error("Errore: ", error);
+      socket.emit(
+        "errorMessage",
+        "Si è verificato un errore durante l'invio del messaggio."
+      );
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("user disconnected");
+    console.log("L'utente si è disconnesso");
   });
 });
