@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 /**
  * headers:{
- *    Authorization: `Bearer ${token}`
+ *    authorization: `Bearer ${token}`
  * }
  */
 
