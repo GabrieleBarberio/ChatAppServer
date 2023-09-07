@@ -3,14 +3,6 @@ const { Schema, model } = mongoose;
 
 const UserSchema = new Schema( //schema == classe di mongoose che ci permette di creare lo schema del modello
   {
-    first_name: {
-      type: String,
-      required: true,
-    },
-    last_name: {
-      type: String,
-      required: true,
-    },
     email: {
       type: String,
       required: true,
@@ -22,6 +14,10 @@ const UserSchema = new Schema( //schema == classe di mongoose che ci permette di
       unique: true,
     },
     password: {
+      type: String,
+      required: true,
+    },
+    status: {
       type: String,
       required: true,
     },

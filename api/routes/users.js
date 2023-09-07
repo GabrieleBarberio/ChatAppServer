@@ -61,11 +61,10 @@ app.get("/:id", authToken, async (req, res) => {
  */
 app.post("/", async (req, res) => {
   const schema = Joi.object().keys({
-    first_name: Joi.string().required(),
-    last_name: Joi.string().required(),
     email: Joi.string().required(),
     user_name: Joi.string().required(),
     password: Joi.string().required(),
+    status: Joi.string().required(),
   });
 
   try {
@@ -92,10 +91,14 @@ app.post("/login", async (req, res) => {
   const { user_name, password } = req.body; // destrutturo il body della richiesta e prendo user_name e password
 
   try {
-    const user = await User.findOne({ user_name }, "user_name password", {
-      // 3 PARAMETRI!
-      lean: true,
-    });
+    const user = await User.findOne(
+      { user_name },
+      "user_name password status",
+      {
+        // 3 PARAMETRI!
+        lean: true,
+      }
+    );
     const payload = {
       //payload per generare il jwt
       userId: user._id,
@@ -110,9 +113,12 @@ app.post("/login", async (req, res) => {
         expiresIn: "24h", // Il token scadrà dopo 24 ore (?)
       });
       // se esiste e le password sono uguali, hai fatto il login
-      return res
-        .status(200)
-        .json({ token, user_name: user.user_name, _id: user._id });
+      return res.status(200).json({
+        token,
+        user_name: user.user_name,
+        _id: user._id,
+        status: user.status,
+      });
     } else {
       return res.status(401).send("Usernamane or Password not found!"); //altrimenti la pass è errata
     }
